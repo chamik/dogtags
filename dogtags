@@ -1,0 +1,32 @@
+#!/bin/bash
+
+TOPTEXT="TOP TEXT"
+BOTTOMTEXT="BOTTOM TEXT"
+
+if [ $# -eq 0 ]; then
+  echo "Please provide a file name as an argument."
+  exit 1
+fi
+
+if [ ! -f "$1" ]; then
+  echo "File '$1' does not exist."
+  exit 1
+fi
+
+mapfile -t names < "$1"
+
+mkdir -p output
+
+for name in "${names[@]}"; do
+  first_name=$(echo "$name" | awk '{print $1}')
+  last_name=$(echo "$name" | awk '{print $2}')
+
+  sed -e "s/@NAME/$first_name/g" -e "s/@SURNAME/$last_name/g" -e "s/@TOPTEXT/$TOPTEXT/g" -e "s/@BOTTOMTEXT/$BOTTOMTEXT/g" template.svg > ./output/"${first_name}_${last_name}.svg"
+
+  inkscape "./output/${first_name}_${last_name}.svg" --export-text-to-path --export-plain-svg="./output/${first_name}_${last_name}.svg" > /dev/null 2>&1
+
+  [ ${#first_name} -gt 12 ] && echo "Warning: name $first_name ($last_name) exceeds 12 characters"
+  [ ${#last_name} -gt 13 ] && echo "Warning: surname ($first_name) $last_name exceeds 13 characters"
+done
+
+exit 0
